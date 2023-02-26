@@ -1,0 +1,28 @@
+{
+    "Lua.diagnostics.globals": [
+        "love",
+        "hohdiswork",
+        "target",
+        "wf",
+        "fps",
+        "time",
+        "world",
+        "ground",
+        "board",
+        "window",
+        "bow",
+        "cam",
+        "arrow",
+        "joint",
+        "joinArrowToTarget",
+        "gamestate",
+        "state",
+        "game",
+        "menu"
+    ],
+    "Lua.runtime.version": "LuaJIT",
+    "Lua.runtime.special": [],
+    "Lua.workspace.library": [
+        "${3rd}/love2d/library"
+    ]
+}
