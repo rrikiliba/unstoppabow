@@ -1,12 +1,8 @@
-world = require('lib/windfield/windfield').newWorld(0, 500)
-  cam = require('lib/hump.camera')()
-  Gamestate = require 'lib/hump.gamestate' 
-
+Gamestate = require 'lib/hump.gamestate' 
 menu, game = {}, {}
 
-window = {}
-window.width = love.graphics.getWidth()
-window.height = love.graphics.getHeight()
+data = {}
+status = 0
 
 function love.load()
 
@@ -21,26 +17,61 @@ end
 
 function game:init()
 
-  board = {}
+  world = require('lib/windfield/windfield').newWorld(0, 500)
+  world:addCollisionClass('board')
+  world:addCollisionClass('ground')
+  world:addCollisionClass('limit')
+  world:addCollisionClass('target')
+  world:addCollisionClass('arrow')
 
-    board.collider = world:newLineCollider(window.width /5, 0, window.width /5, window.height)
+  cam = require('lib/hump.camera')()
+
+end
+
+function menu:enter()
+
+end
+
+function game:enter()
+
+  board = {}
+    board.collider = world:newLineCollider(200, -768, 200, 768)
     board.collider:setType('static')
-    world:addCollisionClass('board')
     board.collider:setCollisionClass('board')
 
-  target = {}
+  ground = {}
+    ground.collider = world:newLineCollider(0, 768, 1024, 768)
+    ground.collider:setType('static')
+    ground.collider:setCollisionClass('ground')
 
-    world:addCollisionClass('target')
-    target.collider = world:newCircleCollider(window.width /2, window.height *14 /15, window.height /45)
+  limit = {}
+    limit.collider = world:newLineCollider(0, -2048, 0, 2048)
+    limit.collider:setType('static')
+    limit.collider:setCollisionClass('limit')
+
+  target = {}
+    target.collider = world:newCircleCollider(500, 700, 15)
     target.collider:setCollisionClass('target')
 
   arrow = {}
-
-    world:addCollisionClass('arrow')
-    arrow.collider = world:newCircleCollider(window.width *4/5, target.collider:getY() *1.1, window.height /45)
+    arrow.collider = world:newCircleCollider(800, 730, 15)
     arrow.collider:setCollisionClass('arrow')
 
-  target.collider:applyLinearImpulse(0, -2000)
+  if status == 0 then
+    status = 1
+    target.collider:applyLinearImpulse(0, -2000)
+  end
+
+end
+
+function game:leave()
+  
+  board.collider:destroy()
+  arrow.collider:destroy()
+  if target.collider ~= nil then
+    target.collider:destroy()
+  end
+  status = 0
 
 end
 
@@ -49,34 +80,50 @@ function love.update(dt)
 end
 
 function menu:keyreleased(key)
-  if key == 'space' then
+
+  if key == 'return' then
     Gamestate.switch(game)
   end
+ 
 end
 
 function game:update(dt)
   
   world:update(dt)
 
-  if love.keyboard.isDown('space') or love.keyboard.isDown('return') then
-    arrow.collider:applyLinearImpulse(-200, -50)
-    arrow.collider:applyAngularImpulse(0.2)
+  if status < 3 then
+    cam:lookAt(target.collider:getX(), target.collider:getY())
+    arrow.collider:setY(target.collider:getY()+(arrow.collider:getX()-target.collider:getX())/2)
+    if target.collider:enter('ground') then
+      Gamestate.switch(menu)
+    end
+  else
+    cam:lookAt(arrow.collider:getX(), arrow.collider:getY())
+    if arrow.collider:enter('limit') then
+      Gamestate.switch(menu)
+    end
   end
 
   if arrow.collider:enter('target') then
     target.collider:destroy()
     target.collider = nil
+    arrow.collider:applyLinearImpulse(0, -1000)
+    status = 3
   end
 
   if arrow.collider:enter('board') then
     arrow.collider:setType('static')
+    status = 4
   end
 
-  if target.collider ~= nil then
-    cam:lookAt(target.collider:getX(), target.collider:getY())
-    arrow.collider:setY(target.collider:getY() +30)
-  else
-    cam:lookAt(arrow.collider:getX(), arrow.collider:getY())
+  if love.keyboard.isDown('space') then
+    if status == 1 then
+      arrow.collider:applyLinearImpulse(-3000, -3000)
+      status = 2
+    elseif status == 4 then
+      Gamestate.switch(menu)
+    end
+    
   end
 
 end
@@ -87,7 +134,9 @@ end
 
 function menu:draw()
   
-  love.graphics.print("Press SPACE to continue")
+  local message = 'Press ENTER to continue'
+  love.graphics.setFont(love.graphics.newFont(28))
+  love.graphics.print(message, (love.graphics.getWidth()-love.graphics.getFont():getWidth(message))/2, love.graphics.getHeight()/3*2)
 
 end
 
@@ -99,4 +148,13 @@ function game:draw()
 
   cam:detach()
 
+  love.graphics.setColor(1,0,0)
+  local fps = string.format('%.0f', love.timer.getFPS())
+  love.graphics.print(fps, love.graphics.getWidth() - love.graphics.getFont():getWidth(fps))
+  love.graphics.setColor(1,1,1)
+  
+end
+
+function data:read()
+  --read csv/json file
 end

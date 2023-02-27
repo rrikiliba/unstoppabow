@@ -18,7 +18,12 @@
         "gamestate",
         "state",
         "game",
-        "menu"
+        "menu",
+        "data",
+        "input",
+        "status",
+        "focus",
+        "limit"
     ],
     "Lua.runtime.version": "LuaJIT",
     "Lua.runtime.special": [],
