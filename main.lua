@@ -52,10 +52,14 @@ function game:enter()
   target = {}
     target.collider = world:newCircleCollider(500, 700, 15)
     target.collider:setCollisionClass('target')
+    target.sprite = love.graphics.newImage('assets/sprites/target00.png')
+    target.rotation = 0
 
   arrow = {}
     arrow.collider = world:newCircleCollider(800, 730, 15)
     arrow.collider:setCollisionClass('arrow')
+    arrow.sprite = love.graphics.newImage('assets/sprites/arrow.png')
+    arrow.rotation = 0
 
   if status == 0 then
     status = 1
@@ -104,6 +108,12 @@ function game:update(dt)
     end
   end
 
+  target.rotation = target.rotation + dt
+  if status > 1 and status < 4 then 
+    arrow.rotation = arrow.rotation - 0.005
+    target.rotation = arrow.rotation
+  end
+
   if arrow.collider:enter('target') then
     target.collider:destroy()
     target.collider = nil
@@ -141,9 +151,13 @@ function menu:draw()
 end
 
 function game:draw()
-  
+
   cam:attach()
 
+    love.graphics.draw(arrow.sprite, arrow.collider:getX(), arrow.collider:getY(), arrow.rotation)
+    if status < 3 then
+      love.graphics.draw(target.sprite, target.collider:getX(), target.collider:getY(), target.rotation, nil, nil, target.sprite:getWidth()/2, target.sprite:getHeight()/2)
+    end
     world:draw()
 
   cam:detach()
